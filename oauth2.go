@@ -1,10 +1,11 @@
-package main
+package oauth2
 
 import (
 	"bytes"
 	"context"
 	"fmt"
 	"net/url"
+	"oauth2/internal"
 	"regexp"
 	"strings"
 )
@@ -50,7 +51,7 @@ func SetAuthURLParam(key, value string) AuthCodeOption {
 }
 
 func (c *Config) AuthCodeURL(shop string, opts ...AuthCodeOption) string {
-	authUrl := fmt.Sprintf("%s%s", c.fixSite(shop), c.Endpoint.AuthURL)
+	authUrl := fmt.Sprintf("%s%s?", c.fixSite(shop), c.Endpoint.AuthURL)
 
 	var buf bytes.Buffer
 	buf.WriteString(authUrl)
@@ -73,7 +74,7 @@ func (c *Config) AuthCodeURL(shop string, opts ...AuthCodeOption) string {
 	return buf.String()
 }
 
-func (c *Config) Exchange(ctx context.Context, code string, opts ...AuthCodeOption) (*Token, error) {
+func (c *Config) Exchange(ctx context.Context, shop, code string, opts ...AuthCodeOption) (*Token, error) {
 	v := url.Values{
 		"grant_type": {"authorization_code"},
 		"code":       {code},
@@ -84,12 +85,15 @@ func (c *Config) Exchange(ctx context.Context, code string, opts ...AuthCodeOpti
 	for _, opt := range opts {
 		opt.setValue(v)
 	}
-	return nil, nil
-	//return retrieveToken(ctx, c, v)
+	return retrieveToken(ctx, shop, c, v)
 }
 
 func (c *Config) fixSite(shop string) string {
 	return fmt.Sprintf("https://%s", shop)
+}
+
+func (c *Config) fixTokenUrl(shop string) string {
+	return fmt.Sprintf("https://%s/%s", shop, strings.TrimPrefix(c.Endpoint.TokenURL, "/"))
 }
 
 func (c *Config) ValidShop(shop string) bool {
@@ -101,15 +105,13 @@ func (c *Config) ValidShop(shop string) bool {
 	return shopRegexp.MatchString(shop)
 }
 
-//func retrieveToken(ctx context.Context, c *Config, v url.Values) (*Token, error) {
-//	tk, err := internal.
-//
-//		(ctx, c.ClientID, c.ClientSecret, c.Endpoint.TokenURL, v, internal.AuthStyle(c.Endpoint.AuthStyle))
-//	if err != nil {
-//		if rErr, ok := err.(*internal.RetrieveError); ok {
-//			return nil, (*RetrieveError)(rErr)
-//		}
-//		return nil, err
-//	}
-//	return tokenFromInternal(tk), nil
-//}
+func retrieveToken(ctx context.Context, shop string, c *Config, v url.Values) (*Token, error) {
+	tk, err := internal.RetrieveToken(ctx, c.ClientID, c.ClientSecret, c.fixTokenUrl(shop), v)
+	if err != nil {
+		if rErr, ok := err.(*internal.RetrieveError); ok {
+			return nil, (*RetrieveError)(rErr)
+		}
+		return nil, err
+	}
+	return tokenFromInternal(tk), nil
+}

@@ -17,26 +17,22 @@ var DefaultRequestPath = "/auth/shoplazza"
 var DefaultCallbackPath = "/auth/shoplazza/callback"
 
 type GinMiddleware struct {
-	OauthConfig  *Config
-	RequestPath  string
-	CallbackPath string
+	oauthConfig  *Config
+	requestPath  string
+	callbackPath string
 
 	// ProviderIgnoreState bool
 	// 自定义 request 处理函数
-	RequestFunc func(c *gin.Context)
+	requestFunc func(c *gin.Context)
 	// 自定义 callback 处理函数
-	CallbackFunc func(c *gin.Context)
+	callbackFunc func(c *gin.Context)
 }
 
-func NewGinMiddleware(oauthConfig *Config, options ...OauthGinOptionFunc) *GinMiddleware {
+func NewGinMiddleware(oauthConfig *Config) *GinMiddleware {
 	gm := &GinMiddleware{
-		RequestPath:  DefaultRequestPath,
-		CallbackPath: DefaultCallbackPath,
-		OauthConfig:  oauthConfig,
-	}
-
-	for _, option := range options {
-		option(gm)
+		requestPath:  DefaultRequestPath,
+		callbackPath: DefaultCallbackPath,
+		oauthConfig:  oauthConfig,
 	}
 	return gm
 }
@@ -44,15 +40,15 @@ func NewGinMiddleware(oauthConfig *Config, options ...OauthGinOptionFunc) *GinMi
 func (gm *GinMiddleware) Handler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		switch c.Request.URL.Path {
-		case gm.RequestPath:
-			if gm.RequestFunc != nil {
-				gm.RequestFunc(c)
+		case gm.requestPath:
+			if gm.requestFunc != nil {
+				gm.requestFunc(c)
 			} else {
 				gm.ginOauthRequest(c)
 			}
-		case gm.CallbackPath:
-			if gm.CallbackFunc != nil {
-				gm.CallbackFunc(c)
+		case gm.callbackPath:
+			if gm.callbackFunc != nil {
+				gm.callbackFunc(c)
 			} else {
 				gm.ginOauthCallback(c)
 			}
@@ -64,20 +60,19 @@ func (gm *GinMiddleware) Handler() gin.HandlerFunc {
 
 func (gm *GinMiddleware) ginOauthRequest(c *gin.Context) {
 	params := gm.getParams(c)
-	if params == nil || !gm.OauthConfig.ValidShop(params.Get("shop")) {
+	if params == nil || !gm.oauthConfig.ValidShop(params.Get("shop")) {
 		c.String(400, "OAuth endpoint is not a myshoplazza site.")
 		return
 	}
 
 	var opts []AuthCodeOption
-	// TODO state
 	//if !gm.ProviderIgnoreState {
 	//	state := GetRandomString(48)
 	//	opts = append(opts, SetAuthURLParam("state", state))
 	//	session := sessions.Default(c)
 	//	session.Set("auth2.state", state)
 	//}
-	c.Redirect(302, gm.OauthConfig.AuthCodeURL(params.Get("shop"), opts...))
+	c.Redirect(302, gm.oauthConfig.AuthCodeURL(params.Get("shop"), opts...))
 }
 
 func (gm *GinMiddleware) ginOauthCallback(c *gin.Context) {
@@ -91,7 +86,7 @@ func (gm *GinMiddleware) ginOauthCallback(c *gin.Context) {
 	}
 
 	shop := params.Get("shop")
-	if !gm.OauthConfig.ValidShop(shop) {
+	if !gm.oauthConfig.ValidShop(shop) {
 		c.String(400, "OAuth endpoint is not a myshoplazza site.")
 		c.Abort()
 		return
@@ -103,7 +98,7 @@ func (gm *GinMiddleware) ginOauthCallback(c *gin.Context) {
 		return
 	}
 
-	token, err := gm.OauthConfig.Exchange(context.Background(), shop, params.Get("code"))
+	token, err := gm.oauthConfig.Exchange(context.Background(), shop, params.Get("code"))
 	if err != nil {
 		c.String(400, err.Error())
 		c.Abort()
@@ -129,24 +124,26 @@ func (gm *GinMiddleware) signatureValid(params url.Values) bool {
 	v := params.Get("hmac")
 	params.Del("hmac")
 
-	hm := hmac.New(sha256.New, []byte(gm.OauthConfig.ClientSecret))
+	hm := hmac.New(sha256.New, []byte(gm.oauthConfig.ClientSecret))
 	hm.Write([]byte(params.Encode()))
 	signature := hex.EncodeToString(hm.Sum(nil))
 	return hmac.Equal([]byte(signature), []byte(v))
 }
 
-type OauthGinOptionFunc func(*GinMiddleware)
-
-func SetRequestPath(path string) OauthGinOptionFunc {
-	return func(gm *GinMiddleware) {
-		gm.RequestPath = path
-	}
+func (gm *GinMiddleware) SetRequestPath(path string) {
+	gm.requestPath = path
 }
 
-func SetCallbackPath(path string) OauthGinOptionFunc {
-	return func(gm *GinMiddleware) {
-		gm.CallbackPath = path
-	}
+func (gm *GinMiddleware) SetCallbackPath(path string) {
+	gm.callbackPath = path
+}
+
+func (gm *GinMiddleware) SetRequestFunc(fn func(c *gin.Context)) {
+	gm.requestFunc = fn
+}
+
+func (gm *GinMiddleware) SetCallbackFunc(fn func(c *gin.Context)) {
+	gm.callbackFunc = fn
 }
 
 func GetRandomString(n int) string {

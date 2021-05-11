@@ -34,6 +34,15 @@ r := gin.New()
 oauth := &oauth2.Config{ xxx... }
 
 oauthMid := oauth2.NewGinMiddleware(oauth)
+oauthMid.SetCallbackPath("xxx") // 自定义 callback path
+oauthMid.SetCallbackFunc(func(c *gin.Context) { // 自定义 callback 处理函数
+    // ....
+})
+oauthMid.SetRequestPath("xxx") // 自定义 request path
+oauthMid.SetRequestFunc(func(c *gin.Context) { // 自定义 request 处理函数
+    // ....
+})
+
 r.Use(oauthMid.Handler())
 
 r.GET(oauth2.DefaultCallbackPath, func(c *gin.Context) {

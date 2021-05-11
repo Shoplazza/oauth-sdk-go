@@ -88,6 +88,17 @@ func (c *Config) Exchange(ctx context.Context, shop, code string, opts ...AuthCo
 	return retrieveToken(ctx, shop, c, v)
 }
 
+func (c *Config) RefreshToken(ctx context.Context, shop, token string, opts ...AuthCodeOption) (*Token, error) {
+	v := url.Values{
+		"grant_type":    {"refresh_token"},
+		"refresh_token": {token},
+	}
+	for _, opt := range opts {
+		opt.setValue(v)
+	}
+	return retrieveToken(ctx, shop, c, v)
+}
+
 func (c *Config) fixSite(shop string) string {
 	return fmt.Sprintf("https://%s", shop)
 }

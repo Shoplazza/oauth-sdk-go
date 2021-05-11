@@ -5,6 +5,6 @@ import (
 )
 
 var Endpoint = oauth2.Endpoint{
-	AuthURL:  "/callback/shoplazza/oauth",
+	AuthURL:  "/admin/oauth/authorize",
 	TokenURL: "/admin/oauth/token",
 }

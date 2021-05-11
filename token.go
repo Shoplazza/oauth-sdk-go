@@ -13,7 +13,7 @@ import (
 const expiryDelta = 10 * time.Second
 
 type StoreInfo struct {
-	ID     int
+	ID     string
 	Locale string
 	Name   string
 }

@@ -18,7 +18,7 @@ import (
 )
 
 type StoreInfo struct {
-	ID     int
+	ID     string
 	Locale string
 	Name   string
 }
@@ -43,7 +43,7 @@ type tokenJSON struct {
 	Scope        string `json:"scope"`
 	CreatedAt    int64  `json:"created_at"`
 	ExpiresAt    int64  `json:"expires_at"`
-	StoreID      int    `json:"store_id"`
+	StoreID      string `json:"store_id"`
 	StoreName    string `json:"store_name"`
 	Locale       string `json:"locale"`
 }
@@ -107,13 +107,12 @@ func doTokenRoundTrip(ctx context.Context, req *http.Request) (*Token, error) {
 			return nil, err
 		}
 
-		storeId, _ := strconv.Atoi(vals.Get("store_id"))
 		token = &Token{
 			AccessToken:  vals.Get("access_token"),
 			TokenType:    vals.Get("token_type"),
 			RefreshToken: vals.Get("refresh_token"),
 			StoreInfo: &StoreInfo{
-				ID:     storeId,
+				ID:     vals.Get("store_id"),
 				Locale: vals.Get("locale"),
 				Name:   vals.Get("store_name"),
 			},

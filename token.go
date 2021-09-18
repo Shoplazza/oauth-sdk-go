@@ -1,8 +1,8 @@
 package common_oauth2
 
 import (
-	"common_oauth2/internal"
 	"fmt"
+	"gitlab.shoplazza.site/common/common-oauth2/internal"
 	"net/http"
 	"net/url"
 	"strconv"

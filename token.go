@@ -1,10 +1,10 @@
 package common_oauth2
 
 import (
+	"common_oauth2/internal"
 	"fmt"
 	"net/http"
 	"net/url"
-	"oauth2/internal"
 	"strconv"
 	"strings"
 	"time"

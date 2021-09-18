@@ -2,10 +2,11 @@ package common_oauth2
 
 import (
 	"bytes"
+	"common_oauth2/internal"
 	"context"
 	"fmt"
 	"net/url"
-	"oauth2/internal"
+
 	"regexp"
 	"strings"
 )

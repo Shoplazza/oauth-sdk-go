@@ -1,4 +1,4 @@
-package oauth2
+package common_oauth2
 
 import (
 	"bytes"

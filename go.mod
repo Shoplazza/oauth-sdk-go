@@ -1,4 +1,4 @@
-module common_oauth2
+module gitlab.shoplazza.site/common/common-oauth2
 
 go 1.14
 

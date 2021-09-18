@@ -2,9 +2,9 @@ package common_oauth2
 
 import (
 	"bytes"
-	"common_oauth2/internal"
 	"context"
 	"fmt"
+	"gitlab.shoplazza.site/common/common-oauth2/internal"
 	"net/url"
 
 	"regexp"

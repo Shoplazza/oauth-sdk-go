@@ -2,19 +2,19 @@ package common_oauth2
 
 import (
 	"context"
-	"crypto/hmac"
 	"crypto/rand"
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"net/url"
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/securecookie"
+	"github.com/gorilla/sessions"
 )
 
 var DefaultRequestPath = "/auth/shoplazza"
 var DefaultCallbackPath = "/auth/shoplazza/callback"
+var store = sessions.NewCookieStore(securecookie.GenerateRandomKey(32), securecookie.GenerateRandomKey(32))
 
 type GinMiddleware struct {
 	oauthConfig  *Config
@@ -26,6 +26,8 @@ type GinMiddleware struct {
 	requestFunc func(c *gin.Context)
 	// 自定义 callback 处理函数
 	callbackFunc func(c *gin.Context)
+	// access-token 处理函数
+	accessTokenHandlerFunc func(c *gin.Context, token *Token)
 }
 
 func NewGinMiddleware(oauthConfig *Config) *GinMiddleware {
@@ -66,12 +68,14 @@ func (gm *GinMiddleware) ginOauthRequest(c *gin.Context) {
 	}
 
 	var opts []AuthCodeOption
-	//if !gm.ProviderIgnoreState {
-	//	state := GetRandomString(48)
-	//	opts = append(opts, SetAuthURLParam("state", state))
-	//	session := sessions.Default(c)
-	//	session.Set("auth2.state", state)
-	//}
+
+	state := GetRandomString(48)
+	opts = append(opts, SetAuthURLParam("state", state))
+
+	session, _ := store.Get(c.Request, "state-session")
+	session.Values["state"] = state
+	session.Save(c.Request, c.Writer)
+
 	c.Redirect(302, gm.oauthConfig.AuthCodeURL(params.Get("shop"), opts...))
 }
 
@@ -92,7 +96,21 @@ func (gm *GinMiddleware) ginOauthCallback(c *gin.Context) {
 		return
 	}
 
-	if !gm.signatureValid(params) {
+	stateFromParam := params.Get("state")
+	session, _ := store.Get(c.Request, "state-session")
+	stateFromSession := session.Values["state"]
+	if stateFromSession == nil {
+		c.String(400, "State does not exist in the session.")
+		c.Abort()
+		return
+	}
+	if stateFromParam != stateFromSession.(string) {
+		c.String(400, "State does not match.")
+		c.Abort()
+		return
+	}
+
+	if !gm.oauthConfig.SignatureValid(params) {
 		c.String(400, "Signature does not match, it may have been tampered with.")
 		c.Abort()
 		return
@@ -105,6 +123,12 @@ func (gm *GinMiddleware) ginOauthCallback(c *gin.Context) {
 		return
 	}
 	c.Set("oauth2.token", token)
+
+	if gm.accessTokenHandlerFunc == nil {
+		c.Next()
+	} else {
+		gm.accessTokenHandlerFunc(c, token)
+	}
 }
 
 func (gm *GinMiddleware) getParams(c *gin.Context) url.Values {
@@ -118,16 +142,6 @@ func (gm *GinMiddleware) getParams(c *gin.Context) url.Values {
 		return nil
 	}
 	return params
-}
-
-func (gm *GinMiddleware) signatureValid(params url.Values) bool {
-	v := params.Get("hmac")
-	params.Del("hmac")
-
-	hm := hmac.New(sha256.New, []byte(gm.oauthConfig.ClientSecret))
-	hm.Write([]byte(params.Encode()))
-	signature := hex.EncodeToString(hm.Sum(nil))
-	return hmac.Equal([]byte(signature), []byte(v))
 }
 
 func (gm *GinMiddleware) SetRequestPath(path string) {
@@ -144,6 +158,10 @@ func (gm *GinMiddleware) SetRequestFunc(fn func(c *gin.Context)) {
 
 func (gm *GinMiddleware) SetCallbackFunc(fn func(c *gin.Context)) {
 	gm.callbackFunc = fn
+}
+
+func (gm *GinMiddleware) SetAccessTokenHandlerFunc(fn func(c *gin.Context, token *Token)) {
+	gm.accessTokenHandlerFunc = fn
 }
 
 func GetRandomString(n int) string {

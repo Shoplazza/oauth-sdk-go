@@ -3,9 +3,13 @@ package common_oauth2
 import (
 	"bytes"
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
-	"gitlab.shoplazza.site/common/common-oauth2/internal"
 	"net/url"
+
+	"gitlab.shoplazza.site/common/common-oauth2/internal"
 
 	"regexp"
 	"strings"
@@ -106,6 +110,16 @@ func (c *Config) fixSite(shop string) string {
 
 func (c *Config) fixTokenUrl(shop string) string {
 	return fmt.Sprintf("https://%s/%s", shop, strings.TrimPrefix(c.Endpoint.TokenURL, "/"))
+}
+
+func (c *Config) SignatureValid(params url.Values) bool {
+	v := params.Get("hmac")
+	params.Del("hmac")
+
+	hm := hmac.New(sha256.New, []byte(c.ClientSecret))
+	hm.Write([]byte(params.Encode()))
+	signature := hex.EncodeToString(hm.Sum(nil))
+	return hmac.Equal([]byte(signature), []byte(v))
 }
 
 func (c *Config) ValidShop(shop string) bool {

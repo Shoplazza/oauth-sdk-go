@@ -27,7 +27,7 @@ type GinMiddleware struct {
 	// 自定义 callback 处理函数
 	callbackFunc func(c *gin.Context)
 	// access-token 处理函数
-	accessTokenHandlerFunc func(c *gin.Context, token *Token)
+	accessTokenHandlerFunc func(c *gin.Context, shop string, token *Token)
 }
 
 func NewGinMiddleware(oauthConfig *Config) *GinMiddleware {
@@ -127,7 +127,7 @@ func (gm *GinMiddleware) ginOauthCallback(c *gin.Context) {
 	if gm.accessTokenHandlerFunc == nil {
 		c.Next()
 	} else {
-		gm.accessTokenHandlerFunc(c, token)
+		gm.accessTokenHandlerFunc(c, shop, token)
 	}
 }
 
@@ -160,7 +160,7 @@ func (gm *GinMiddleware) SetCallbackFunc(fn func(c *gin.Context)) {
 	gm.callbackFunc = fn
 }
 
-func (gm *GinMiddleware) SetAccessTokenHandlerFunc(fn func(c *gin.Context, token *Token)) {
+func (gm *GinMiddleware) SetAccessTokenHandlerFunc(fn func(c *gin.Context, shop string, token *Token)) {
 	gm.accessTokenHandlerFunc = fn
 }
 

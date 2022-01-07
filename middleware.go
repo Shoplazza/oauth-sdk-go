@@ -39,8 +39,8 @@ func NewGinMiddleware(oauthConfig *Config) *GinMiddleware {
 	return gm
 }
 
-func (gm *GinMiddleware) IgnoreState(ignoreState bool) {
-	gm.ignoreState = ignoreState
+func (gm *GinMiddleware) IgnoreState() {
+	gm.ignoreState = true
 }
 
 func (gm *GinMiddleware) Handler() gin.HandlerFunc {

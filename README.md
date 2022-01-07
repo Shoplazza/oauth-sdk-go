@@ -110,6 +110,8 @@ func main() {
 	defer db.Close()
 
 	oauthMid := co.NewGinMiddleware(oauth)
+	// 设置是否做 state 校验
+	oauthMid.IgnoreState(false)
 	// 可以使用封装好的方法，也可以自定义 callback 处理函数
 	oauthMid.SetCallbackPath("/oauth_sdk/redirect_uri/")                                
 	// 可以使用封装好的方法，也可以自定义 request 处理函数
@@ -131,6 +133,8 @@ func main() {
 
 	r := gin.Default()
 	r.Use(oauthMid.Handler())
+	// 【重要】如果使用了 oauthMid.SetAccessTokenHandlerFunc，需要关闭 gin 的自动重定向功能
+	r.RedirectTrailingSlash = false
 
 	r.GET("/open_api/test", func(c *gin.Context) {
 		var req *http.Request

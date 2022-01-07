@@ -20,8 +20,8 @@ type GinMiddleware struct {
 	oauthConfig  *Config
 	requestPath  string
 	callbackPath string
+	ignoreState  bool
 
-	// ProviderIgnoreState bool
 	// 自定义 request 处理函数
 	requestFunc func(c *gin.Context)
 	// 自定义 callback 处理函数
@@ -37,6 +37,10 @@ func NewGinMiddleware(oauthConfig *Config) *GinMiddleware {
 		oauthConfig:  oauthConfig,
 	}
 	return gm
+}
+
+func (gm *GinMiddleware) IgnoreState(ignoreState bool) {
+	gm.ignoreState = ignoreState
 }
 
 func (gm *GinMiddleware) Handler() gin.HandlerFunc {
@@ -69,19 +73,19 @@ func (gm *GinMiddleware) ginOauthRequest(c *gin.Context) {
 
 	var opts []AuthCodeOption
 
-	state := GetRandomString(48)
-	opts = append(opts, SetAuthURLParam("state", state))
+	if gm.ignoreState == false {
+		state := GetRandomString(48)
+		opts = append(opts, SetAuthURLParam("state", state))
 
-	session, _ := store.Get(c.Request, "state-session")
-	session.Values["state"] = state
-	session.Save(c.Request, c.Writer)
+		session, _ := store.Get(c.Request, "state-session")
+		session.Values["state"] = state
+		session.Save(c.Request, c.Writer)
+	}
 
 	c.Redirect(302, gm.oauthConfig.AuthCodeURL(params.Get("shop"), opts...))
 }
 
 func (gm *GinMiddleware) ginOauthCallback(c *gin.Context) {
-	// TODO valid state => message : CSRF detected
-
 	params := gm.getParams(c)
 	if params == nil {
 		c.String(400, "Invalid callback")
@@ -96,18 +100,20 @@ func (gm *GinMiddleware) ginOauthCallback(c *gin.Context) {
 		return
 	}
 
-	stateFromParam := params.Get("state")
-	session, _ := store.Get(c.Request, "state-session")
-	stateFromSession := session.Values["state"]
-	if stateFromSession == nil {
-		c.String(400, "State does not exist in the session.")
-		c.Abort()
-		return
-	}
-	if stateFromParam != stateFromSession.(string) {
-		c.String(400, "State does not match.")
-		c.Abort()
-		return
+	if gm.ignoreState == false {
+		stateFromParam := params.Get("state")
+		session, _ := store.Get(c.Request, "state-session")
+		stateFromSession := session.Values["state"]
+		if stateFromSession == nil {
+			c.String(400, "State does not exist in the session.")
+			c.Abort()
+			return
+		}
+		if stateFromParam != stateFromSession.(string) {
+			c.String(400, "State does not match.")
+			c.Abort()
+			return
+		}
 	}
 
 	if !gm.oauthConfig.SignatureValid(params) {

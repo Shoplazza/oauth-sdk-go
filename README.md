@@ -111,7 +111,7 @@ func main() {
 
 	oauthMid := co.NewGinMiddleware(oauth)
 	// 设置是否做 state 校验
-	oauthMid.IgnoreState(false)
+	oauthMid.IgnoreState()
 	// 可以使用封装好的方法，也可以自定义 callback 处理函数
 	oauthMid.SetCallbackPath("/oauth_sdk/redirect_uri/")                                
 	// 可以使用封装好的方法，也可以自定义 request 处理函数

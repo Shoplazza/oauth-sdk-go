@@ -67,8 +67,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
-	co "gitlab.shoplazza.site/common/common-oauth2"
-	"gitlab.shoplazza.site/common/common-oauth2/shoplazza"
+	co "github.com/shoplazza-os/oauth-sdk-go"
+	"github.com/shoplazza-os/oauth-sdk-go/shoplazza"
 )
 
 type Token struct {

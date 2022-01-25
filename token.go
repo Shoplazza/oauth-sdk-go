@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/shoplazza-os/Oauth-SDK-Go/internal"
+	"github.com/shoplazza-os/oauth-sdk-go/internal"
 )
 
 const expiryDelta = 10 * time.Second

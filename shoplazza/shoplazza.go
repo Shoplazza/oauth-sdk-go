@@ -1,7 +1,7 @@
 package shoplazza
 
 import (
-	oauth2 "gitlab.shoplazza.site/common/common-oauth2"
+	oauth2 "oauth-sdk-go"
 )
 
 var Endpoint = oauth2.Endpoint{

@@ -2,7 +2,7 @@ package common_oauth2
 
 import (
 	"fmt"
-	"gitlab.shoplazza.site/common/common-oauth2/internal"
+	"oauth-sdk-go/internal"
 	"net/http"
 	"net/url"
 	"strconv"

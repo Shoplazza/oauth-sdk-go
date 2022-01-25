@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"net/url"
 
-	"oauth-sdk-go/internal"
+	"github.com/shoplazza-os/Oauth-SDK-Go/internal"
 
 	"regexp"
 	"strings"

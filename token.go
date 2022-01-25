@@ -2,12 +2,13 @@ package common_oauth2
 
 import (
 	"fmt"
-	"oauth-sdk-go/internal"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/shoplazza-os/Oauth-SDK-Go/internal"
 )
 
 const expiryDelta = 10 * time.Second

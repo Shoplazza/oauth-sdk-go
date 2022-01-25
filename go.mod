@@ -1,4 +1,4 @@
-module oauth-sdk-go
+module github.com/shoplazza-os/Oauth-SDK-Go
 
 go 1.14
 

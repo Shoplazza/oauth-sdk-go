@@ -14,32 +14,32 @@ oauth := &oauth2.Config{
     RedirectURI: "https://app.com/auth/shoplazza/callback",
     Scopes:      []string{"read_product", "write_product"},
     Endpoint:    shoplazza.Endpoint,
-    Domain:      "preview.shoplazza.com", // 不设置的话默认使用美服域名：myshoplaza.com
+    Domain:      "preview.shoplazza.com", // If not set, production domain name will be used by default: myshoplaza.com
 }
 
-// 授权回调时使用 code 交换 token
+// Use code to exchange tokens when authorizing callbacks
 token, err := oauth.Exchange(context.Background(), "xxx.myshoplaza.com", "code")
 
-// token 过期时刷新 token
+// Refresh token when token expires
 token, err := oauth.RefreshToken(context.Background(), "xxx.myshoplaza.com", "refresh token")
 ```
 
 #### In Gin
-Gin middleware 会默认拦截 `/auth/shoplazza` 以及 `/auth/shoplazza/callback` 两个 URL 的请求:
-- `/auth/shoplazza?shop=xx.myshoplaza.com` : 请求此 URL 时，会重定向到 https://xx.myshoplaza.com/admin/oauth/authorize 去发起授权流程
-- `/auth/shoplazza/callback` : 拦截授权回调请求，自动将回调请求中的 code 替换 token
+Gin middleware will intercept requests from `/auth/shoplazza` and `/auth/shoplazza/callback` URLs by default:
+- `/auth/shoplazza?shop=xx.myshoplaza.com` : When requesting this URL, it will redirect to https://xx.myshoplaza.com/admin/oauth/authorize to initiate the authorization process
+- `/auth/shoplazza/callback` : Intercept the authorization callback request and automatically replace the token with the code in the callback request
 
 ```go
 r := gin.New()
 oauth := &oauth2.Config{ xxx... }
 
 oauthMid := oauth2.NewGinMiddleware(oauth)
-oauthMid.SetCallbackPath("xxx") // 自定义 callback path
-oauthMid.SetCallbackFunc(func(c *gin.Context) { // 自定义 callback 处理函数
+oauthMid.SetCallbackPath("xxx") // custom callback path
+oauthMid.SetCallbackFunc(func(c *gin.Context) { // custom callback function
     // ....
 })
-oauthMid.SetRequestPath("xxx") // 自定义 request path
-oauthMid.SetRequestFunc(func(c *gin.Context) { // 自定义 request 处理函数
+oauthMid.SetRequestPath("xxx") // custom request path
+oauthMid.SetRequestFunc(func(c *gin.Context) { // Custom request function
     // ....
 })
 
@@ -52,7 +52,7 @@ r.GET(oauth2.DefaultCallbackPath, func(c *gin.Context) {
 })
 _ = r.Run(":8080")
 ```
-#### 附上一个简易的 Demo APP 代码
+#### Attach a simple Demo APP
 ```go
 package main
 
@@ -110,17 +110,17 @@ func main() {
 	defer db.Close()
 
 	oauthMid := co.NewGinMiddleware(oauth)
-	// 设置是否做 state 校验
+	// Set whether to do state verification
 	oauthMid.IgnoreState()
-	// 可以使用封装好的方法，也可以自定义 callback 处理函数
+	// You can use the encapsulated function, or you can use a custom callback function
 	oauthMid.SetCallbackPath("/oauth_sdk/redirect_uri/")                                
-	// 可以使用封装好的方法，也可以自定义 request 处理函数
+	// You can use the encapsulated function, or you can use a custom request function
 	oauthMid.SetRequestPath("/oauth_sdk/app_uri")                                         
-    // 该方法是拿到token后的后续处理逻辑，如果使用自定义 callback 处理函数，这个就不需要实现了
+    // This function is to do something after getting the token. If you use a custom callback function, this does not need to be implemented
 	oauthMid.SetAccessTokenHandlerFunc(func(c *gin.Context, shop string, token *co.Token) { 
-		// store-id 存 cookie
+		// store-id is stored in the cookie
 		c.SetCookie("store_id", token.StoreInfo.ID, 3600, "/", "https://3830-43-230-206-233.ngrok.io", false, true)
-		// store-id、shop、access-token等信息存DB
+		// store-id, shop, access-token and other information are stored in DB
 		t := Token{
 			AccessToken: token.AccessToken,
 			Shop:        shop,
@@ -133,7 +133,7 @@ func main() {
 
 	r := gin.Default()
 	r.Use(oauthMid.Handler())
-	// 【重要】如果使用了 oauthMid.SetAccessTokenHandlerFunc，需要关闭 gin 的自动重定向功能
+	// [Important] If oauthMid.SetAccessTokenHandlerFunc is used, the RedirectTrailingSlash of gin needs tto be set to false
 	r.RedirectTrailingSlash = false
 
 	r.GET("/open_api/test", func(c *gin.Context) {

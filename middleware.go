@@ -22,11 +22,11 @@ type GinMiddleware struct {
 	callbackPath string
 	ignoreState  bool
 
-	// 自定义 request 处理函数
+	// custom request function
 	requestFunc func(c *gin.Context)
-	// 自定义 callback 处理函数
+	// custom callback function
 	callbackFunc func(c *gin.Context)
-	// access-token 处理函数
+	// access-token function
 	accessTokenHandlerFunc func(c *gin.Context, shop string, token *Token)
 }
 

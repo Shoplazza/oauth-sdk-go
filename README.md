@@ -388,5 +388,5 @@ r.Run(":8080") // 这里配置成你服务的端口，8080只是示例s
 
 6、启动
 ```
-go run demo_app_middleware.go
+go run demo_app.go
 ```

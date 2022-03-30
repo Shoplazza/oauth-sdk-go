@@ -61,6 +61,7 @@ func newTokenRequest(tokenURL, clientID, clientSecret string, v url.Values) (*ht
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("user-agent", "Oauth-SDK-Go/v1.0.4")
 	return req, nil
 }
 

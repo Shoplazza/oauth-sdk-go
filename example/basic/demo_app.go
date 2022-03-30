@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	co "github.com/shoplazza-os/oauth-sdk-go"
-	"github.com/shoplazza-os/oauth-sdk-go/shoplazza"
+	co "github.com/Shoplazza/oauth-sdk-go"
+	"github.com/Shoplazza/oauth-sdk-go/shoplazza"
 )
 
 type Token struct {

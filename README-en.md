@@ -42,7 +42,7 @@ Read the documentation for configuring the app [Manage Your App](https://helpcen
 ###  2.3. <a name='sdk-demo-app'></a>Start SDK DemoApp
 1、Import Oauth SDK Go
 ```curl
-go get -u https://github.com/Shoplazza/oauth-sdk-go
+go get -u github.com/Shoplazza/oauth-sdk-go
 ```
 
 2、Enter the example/basic directory

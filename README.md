@@ -42,7 +42,7 @@
 ###  2.3. <a name='sdk-demo-app'></a>启动SDK DemoApp
 1、引入Oauth SDK Go
 ```curl
-go get -u https://github.com/Shoplazza/oauth-sdk-go
+go get -u github.com/Shoplazza/oauth-sdk-go
 ```
 
 2、进入example/basic目录
